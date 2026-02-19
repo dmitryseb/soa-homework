@@ -1,0 +1,7 @@
+services:
+  user-service:
+    build:
+      context: ./services/user-service
+    container_name: user-service
+    ports:
+      - "8080:8080"
