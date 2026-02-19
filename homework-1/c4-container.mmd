@@ -1,0 +1,55 @@
+flowchart LR
+  %% People
+  buyer([Покупатель])
+  seller([Продавец])
+
+  %% Marketplace boundary
+  subgraph MP[Marketplace Platform]
+    gw["API Gateway: клиентский backend"]
+
+    userSvc["User Service"]
+    catalogSvc["Catalog Service"]
+    feedSvc["Feed Service"]
+    orderSvc["Order Service"]
+    paymentSvc["Payment Service"]
+    notifSvc["Notification Service"]
+
+    broker[("Event Broker")]
+
+    userDB[(User DB)]
+    catalogDB[(Catalog DB)]
+    feedDB[(Feed DB)]
+    orderDB[(Order DB)]
+    paymentDB[(Payment DB)]
+    notifDB[(Notification DB)]
+  end
+
+  %% External systems
+  payProvider[[Платежный провайдер]]
+  notifyProvider[[Провайдер уведомлений]]
+
+  %% Entry points
+  buyer --> gw
+  seller --> gw
+
+  %% Synchronous interactions
+  gw -->|HTTPS| userSvc & catalogSvc & feedSvc & orderSvc
+  orderSvc -->|HTTPS| paymentSvc
+  feedSvc -. read catalog .-> catalogSvc
+
+  %% Asynchronous interactions
+  orderSvc -->|OrderCreated event| broker
+  paymentSvc -->|Payment event| broker
+  broker -->|events| notifSvc & feedSvc
+
+  %% Data ownership
+  userSvc --> userDB
+  catalogSvc --> catalogDB
+  feedSvc --> feedDB
+  orderSvc --> orderDB
+  paymentSvc --> paymentDB
+  notifSvc --> notifDB
+
+  %% External integrations
+  paymentSvc -->|HTTPS| payProvider
+  notifSvc -->|HTTPS| notifyProvider
